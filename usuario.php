@@ -9,6 +9,7 @@ header('Content-Type: application/json; charset=utf8');
 require 'config/conexao.php';
 
 $metodo = $_SERVER['REQUEST_METHOD'];
+$resposta = array();
 
 switch ($metodo) {
     case 'GET':
