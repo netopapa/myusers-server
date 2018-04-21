@@ -80,7 +80,7 @@ function findAll($conexao) {
 		echo json_encode($resposta);
 	}else{
         http_response_code(200);  
-        $resposta['data'] = pg_fetch_all($result);
+        $resposta = pg_fetch_all($result);
         echo json_encode($resposta);              
     }
 }
@@ -152,7 +152,7 @@ function findOne($conexao, $id) {
 		echo json_encode($resposta);
 	}else{
         http_response_code(200);  
-        $resposta['data'] = pg_fetch_assoc($result);
+        $resposta = pg_fetch_assoc($result);
         echo json_encode($resposta);              
     }
 }

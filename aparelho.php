@@ -64,7 +64,8 @@ switch ($metodo) {
         break;
     default:
         http_response_code(400);
-        echo json_encode(array("Ta na disney."));
+        $resposta['msg'] = 'Tá na disney.';
+        echo json_encode($resposta);   
         break;
 }
 
@@ -80,7 +81,7 @@ function findAll($conexao) {
 		echo json_encode($resposta);
 	}else{
         http_response_code(200);  
-        $resposta['data'] = pg_fetch_all($result);
+        $resposta = pg_fetch_all($result);
         echo json_encode($resposta);              
     }
 }
@@ -152,7 +153,7 @@ function findOne($conexao, $id) {
 		echo json_encode($resposta);
 	}else{
         http_response_code(200);  
-        $resposta['data'] = pg_fetch_assoc($result);
+        $resposta = pg_fetch_assoc($result);
         echo json_encode($resposta);              
     }
 }
