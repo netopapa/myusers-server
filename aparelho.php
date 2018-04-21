@@ -57,24 +57,20 @@ switch ($metodo) {
         }
         break;
     case 'PUT':
-        parse_str(file_get_contents("php://input"), $post_vars);
-        
-        if (isset($_GET["id"])) {
-            $id = $_GET["id"];
-            
-        } else {
-            http_response_code(400);
-            echo json_encode(array("É necessario informar ID do aparelho."));            
-        }
-        
+        parse_str(file_get_contents("php://input"), $request);
+        $request = json_decode($request['request']);
+    
+        update($conexao, $request);          
         break;
     case 'DELETE':
+    
         if (isset($_GET["id"])) {
             $id = $_GET["id"];
-            
+            delete($conexao, $id);
         } else {
             http_response_code(400);
-            echo json_encode(array("É necessario informar ID do aparelho."));            
+            $resposta['msg'] = 'É necessario informar ID do aparelho.';
+            echo json_encode($resposta);          
         }
         break;
     default:
@@ -82,6 +78,8 @@ switch ($metodo) {
         echo json_encode(array("Ta na disney."));
         break;
 }
+
+#----------------------------------------------------------------------------------------------------
 
 function findAll($conexao) {
     $query = "SELECT * FROM aparelhos;";
@@ -112,5 +110,45 @@ function save($conexao, $aparelho) {
         http_response_code(200);  
         $resposta['msg'] = 'Aparelho salvo!';
         echo json_encode($resposta);              
+    }
+}
+
+function update($conexao, $aparelho) {
+
+    if (!$aparelho->id_aparelho) {
+        http_response_code(400);
+        $resposta['msg'] = 'É necessario informar ID do aparelho.';
+        echo json_encode($resposta);
+    } else {
+        $query = "UPDATE aparelhos SET descricao_aparelho = '$aparelho->descricao_aparelho', codigo_aparelho = '$aparelho->codigo_aparelho' WHERE id_aparelho = $aparelho->id_aparelho;";
+    
+        $result = pg_query($conexao, $query);
+    
+        if (!$result) {
+            http_response_code(500);
+            $resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
+            echo json_encode($resposta);
+        }else{
+            http_response_code(200);  
+            $resposta['msg'] = 'Aparelho alterado!';
+            echo json_encode($resposta);      
+        }
+    }
+    
+}
+
+function delete($conexao, $id) {
+    $query = "DELETE FROM aparelhos WHERE id_aparelho = $aparelho->id_aparelho;";
+    
+    $result = pg_query($conexao, $query);
+
+    if (!$result) {
+        http_response_code(500);
+        $resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
+        echo json_encode($resposta);
+    }else{
+        http_response_code(200);  
+        $resposta['msg'] = 'Aparelho deletado!';
+        echo json_encode($resposta);      
     }
 }
