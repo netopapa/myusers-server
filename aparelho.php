@@ -22,18 +22,7 @@ switch ($metodo) {
         if (isset($_GET["id"])) {
             $id = $_GET["id"];
 
-            $query = "SELECT descricao_aparelho, codigo_aparelho FROM aparelhos WHERE id_aparelho = $id;";
-
-			$result = pg_query($conexao, $query);
-			if (!$result) {
-                http_response_code(500);
-				$resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
-				echo json_encode($resposta);
-			}else{
-                http_response_code(200);  
-                $resposta['data'] = pg_fetch_assoc($result);
-                echo json_encode($resposta);              
-            }
+            findOne($conexao, $id);
         } else if (isset($_GET['f'])) {  
 			$funcao = $_GET['f'];
 			$funcao($conexao);
@@ -138,7 +127,7 @@ function update($conexao, $aparelho) {
 }
 
 function delete($conexao, $id) {
-    $query = "DELETE FROM aparelhos WHERE id_aparelho = $aparelho->id_aparelho;";
+    $query = "DELETE FROM aparelhos WHERE id_aparelho = $id;";
     
     $result = pg_query($conexao, $query);
 
@@ -150,5 +139,20 @@ function delete($conexao, $id) {
         http_response_code(200);  
         $resposta['msg'] = 'Aparelho deletado!';
         echo json_encode($resposta);      
+    }
+}
+
+function findOne($conexao, $id) {
+    $query = "SELECT * FROM aparelhos WHERE id_aparelho = $id;";
+
+	$result = pg_query($conexao, $query);
+	if (!$result) {
+        http_response_code(500);
+		$resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
+		echo json_encode($resposta);
+	}else{
+        http_response_code(200);  
+        $resposta['data'] = pg_fetch_assoc($result);
+        echo json_encode($resposta);              
     }
 }
