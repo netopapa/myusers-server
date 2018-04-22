@@ -32,13 +32,15 @@ switch ($metodo) {
         }
         break;
     case 'POST':
+    $post = file_get_contents("php://input");
+    $request = json_decode($post);
+
         if (isset($_GET['f'])) { 
             $funcao = $_GET['f'];
             $request = json_decode($_POST['request']);
 
             $funcao($conexao, $request);
-        } elseif(count($_POST) > 0){
-            $request = json_decode($_POST['request']);
+        } elseif(count($request) > 0){
             save($conexao, $request);                        
         }else{
             http_response_code(400);
