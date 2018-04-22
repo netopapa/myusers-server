@@ -147,3 +147,19 @@ function findOne($conexao, $id) {
         echo json_encode($resposta);              
     }
 }
+
+function findByUsuario($conexao, $usuario) {
+    $query = "SELECT C.* FROM usuarios A RIGHT JOIN usuarios_aparelhos B ON A.id_usuario = B.id_usuario RIGHT JOIN aparelhos C ON B.id_aparelho = C.id_aparelho WHERE A.id_usuario = $usuario->id_usuario;";
+        
+    $result = pg_query($conexao, $query);
+
+    if (!$result) {
+        http_response_code(500);
+		$resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
+		echo json_encode($resposta);
+	}else{
+        http_response_code(200);  
+        $resposta = pg_fetch_all($result);
+        echo json_encode($resposta);              
+    }
+}

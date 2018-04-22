@@ -207,8 +207,16 @@ function findOne($conexao, $id) {
 		$resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
 		echo json_encode($resposta);
 	}else{
-        http_response_code(200);  
         $resposta = pg_fetch_assoc($result);
+
+        $id_usuario = $resposta['id_usuario'];
+        $query = "SELECT C.* FROM usuarios A RIGHT JOIN usuarios_aparelhos B ON A.id_usuario = B.id_usuario RIGHT JOIN aparelhos C ON B.id_aparelho = C.id_aparelho WHERE A.id_usuario = $id_usuario;";
+        
+        $result = pg_query($conexao, $query);
+        
+        $resposta['aparelhos'] = pg_fetch_all($result);
+
+        http_response_code(200);  
         echo json_encode($resposta);              
     }
 }
