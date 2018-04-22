@@ -9,6 +9,7 @@ ini_set('display_startup_erros', 1);
 error_reporting(E_ALL);
 
 header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE');
 header('Content-Type: application/json; charset=utf8');
 
 require 'config/conexao.php';
@@ -32,12 +33,11 @@ switch ($metodo) {
         }
         break;
     case 'POST':
-    $post = file_get_contents("php://input");
-    $request = json_decode($post);
+        $post = file_get_contents("php://input");
+        $request = json_decode($post);
 
         if (isset($_GET['f'])) { 
             $funcao = $_GET['f'];
-            $request = json_decode($_POST['request']);
 
             $funcao($conexao, $request);
         } elseif(count($request) > 0){
@@ -47,14 +47,7 @@ switch ($metodo) {
             echo json_encode(array("Requisição incompleta."));
         }
         break;
-    case 'PUT':
-        parse_str(file_get_contents("php://input"), $request);
-        $request = json_decode($request['request']);
-    
-        update($conexao, $request);          
-        break;
-    case 'DELETE':
-    
+    default:
         if (isset($_GET["id"])) {
             $id = $_GET["id"];
             delete($conexao, $id);
@@ -63,12 +56,7 @@ switch ($metodo) {
             $resposta['msg'] = 'É necessario informar ID do aparelho.';
             echo json_encode($resposta);          
         }
-        break;
-    default:
-        http_response_code(400);
-        $resposta['msg'] = 'Tá na disney.';
-        echo json_encode($resposta);   
-        break;
+        break;  
 }
 
 #----------------------------------------------------------------------------------------------------
