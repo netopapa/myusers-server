@@ -62,6 +62,8 @@ switch ($metodo) {
 #----------------------------------------------------------------------------------------------------
 
 function findAll($conexao) {
+    //$query = "SELECT A.*, C.* FROM usuarios A FULL JOIN usuarios_aparelhos B ON A.id_usuario = B.id_usuario LEFT JOIN aparelhos C ON B.id_aparelho = C.id_aparelho;";
+
     $query = "SELECT * FROM usuarios;";
 
 	$result = pg_query($conexao, $query);
@@ -70,15 +72,25 @@ function findAll($conexao) {
 		$resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
 		echo json_encode($resposta);
 	}else{
-        http_response_code(200);  
         $resposta = pg_fetch_all($result);
+        
+        for ($i=0; $i < count($resposta); $i++) {
+            $id_usuario = $resposta[$i]['id_usuario'];
+            $query = "SELECT C.* FROM usuarios A RIGHT JOIN usuarios_aparelhos B ON A.id_usuario = B.id_usuario RIGHT JOIN aparelhos C ON B.id_aparelho = C.id_aparelho WHERE A.id_usuario = $id_usuario;";
+            
+            $result = pg_query($conexao, $query);
+            
+            $resposta[$i]['aparelhos'] = pg_fetch_all($result);
+        }
+        
+        http_response_code(200);  
         echo json_encode($resposta);              
     }
 }
 
 function save($conexao, $usuario) {
 
-    $query = "INSERT INTO usuarios (nome_usuario, login, email, senha, tempo_expiracao_senha, cod_autorizacao, cod_pessoa) VALUES ('$usuario->nome_usuario', '$usuario->login', '$usuario->email', '$usuario->senha', 1200, 't', $usuario->cod_pessoa);";
+    $query = "INSERT INTO usuarios (nome_usuario, login, email, senha, tempo_expiracao_senha, cod_autorizacao, cod_pessoa) VALUES ('$usuario->nome_usuario', '$usuario->login', '$usuario->email', '$usuario->senha', 1200, 't', $usuario->cod_pessoa) RETURNING id_usuario;";
 
     $result = pg_query($conexao, $query);
 
@@ -87,9 +99,36 @@ function save($conexao, $usuario) {
         $resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
         echo json_encode($resposta);
     }else{
-        http_response_code(200);  
-        $resposta['msg'] = 'Usuário salvo!';
-        echo json_encode($resposta);              
+
+        $result = pg_fetch_all($result);
+        $id_usuario = $result[0]['id_usuario'];
+
+        $result = true;
+        $multiple = '';
+
+        for ($i=0; $i < count($usuario->aparelhos); $i++) {
+            $id_aparelho = $usuario->aparelhos[$i]->id_aparelho;
+            $multiple .= "($id_usuario, $id_aparelho)";
+            
+            if ($i < count($usuario->aparelhos) - 1) {
+                $multiple .= ', ';
+            }
+        }
+
+        if ($multiple != '') {
+            $query = "INSERT INTO usuarios_aparelhos (id_usuario, id_aparelho) VALUES $multiple;";
+            $result = pg_query($conexao, $query);
+        }
+
+        if (!$result) {
+            http_response_code(500);
+            $resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
+            echo json_encode($resposta);
+        }else{
+            http_response_code(200);  
+            $resposta['msg'] = 'Usuário salvo!';
+            echo json_encode($resposta);       
+        }            
     }
 }
 
@@ -104,14 +143,40 @@ function update($conexao, $usuario) {
     
         $result = pg_query($conexao, $query);
     
-        if (!$result) {
+        if (!$result) {     
             http_response_code(500);
             $resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
             echo json_encode($resposta);
         }else{
-            http_response_code(200);  
-            $resposta['msg'] = 'Usuário alterado!';
-            echo json_encode($resposta);      
+
+            $query = "DELETE FROM usuarios_aparelhos WHERE id_usuario = $usuario->id_usuario";
+            $result = pg_query($conexao, $query);
+
+            $multiple = '';
+
+            for ($i=0; $i < count($usuario->aparelhos); $i++) {
+                $id_aparelho = $usuario->aparelhos[$i]->id_aparelho;
+                $multiple .= "($usuario->id_usuario, $id_aparelho)";
+                
+                if ($i < count($usuario->aparelhos) - 1) {
+                    $multiple .= ', ';
+                }
+            }
+    
+            if ($multiple != '') {
+                $query = "INSERT INTO usuarios_aparelhos (id_usuario, id_aparelho) VALUES $multiple;";
+                $result = pg_query($conexao, $query);
+            }
+    
+            if (!$result) {
+                http_response_code(500);
+                $resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
+                echo json_encode($resposta);
+            }else{
+                http_response_code(200);  
+                $resposta['msg'] = 'Usuário alterado!';
+                echo json_encode($resposta);      
+            }     
         }
     }
     
