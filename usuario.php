@@ -78,7 +78,7 @@ function findAll($conexao) {
 
 function save($conexao, $usuario) {
 
-    $query = "INSERT INTO usuarios (nome_usuario, login, email, senha, tempo_expiracao_senha, cod_autorizacao, cod_pessoa) VALUES ('$usuario->nome_usuario', '$usuario->login', '$usuario->email', '$usuario->senha', 1200, '$usuario->cod_autorizacao', $usuario->cod_pessoa);";
+    $query = "INSERT INTO usuarios (nome_usuario, login, email, senha, tempo_expiracao_senha, cod_autorizacao, cod_pessoa) VALUES ('$usuario->nome_usuario', '$usuario->login', '$usuario->email', '$usuario->senha', 1200, 't', $usuario->cod_pessoa);";
 
     $result = pg_query($conexao, $query);
 
