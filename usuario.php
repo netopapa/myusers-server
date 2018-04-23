@@ -63,7 +63,6 @@ switch ($metodo) {
 #----------------------------------------------------------------------------------------------------
 
 function findAll($conexao) {
-    //$query = "SELECT A.*, C.* FROM usuarios A FULL JOIN usuarios_aparelhos B ON A.id_usuario = B.id_usuario LEFT JOIN aparelhos C ON B.id_aparelho = C.id_aparelho;";
 
     $query = "SELECT * FROM usuarios;";
 
@@ -82,6 +81,15 @@ function findAll($conexao) {
             $result = pg_query($conexao, $query);
             
             $resposta[$i]['aparelhos'] = pg_fetch_all($result);
+        }
+
+        for ($i=0; $i < count($resposta); $i++) {
+            $id_usuario = $resposta[$i]['id_usuario'];
+            $query = "SELECT C.* FROM usuarios A RIGHT JOIN usuarios_perfil B ON A.id_usuario = B.id_usuario RIGHT JOIN perfil C ON B.id_perfil = C.id_perfil WHERE A.id_usuario = $id_usuario;";
+            
+            $result = pg_query($conexao, $query);
+            
+            $resposta[$i]['perfis'] = pg_fetch_all($result);
         }
         
         http_response_code(200);  
@@ -121,6 +129,23 @@ function save($conexao, $usuario) {
             $result = pg_query($conexao, $query);
         }
 
+        $result = true;
+        $multiple = '';
+
+        for ($i=0; $i < count($usuario->perfis); $i++) {
+            $id_perfil = $usuario->perfis[$i]->id_perfil;
+            $multiple .= "($id_usuario, $id_perfil)";
+            
+            if ($i < count($usuario->perfis) - 1) {
+                $multiple .= ', ';
+            }
+        }
+
+        if ($multiple != '') {
+            $query = "INSERT INTO usuarios_perfil (id_usuario, id_perfil) VALUES $multiple;";
+            $result = pg_query($conexao, $query);
+        }
+
         if (!$result) {
             http_response_code(500);
             $resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
@@ -153,6 +178,7 @@ function update($conexao, $usuario) {
             $query = "DELETE FROM usuarios_aparelhos WHERE id_usuario = $usuario->id_usuario";
             $result = pg_query($conexao, $query);
 
+            $result = true;
             $multiple = '';
 
             for ($i=0; $i < count($usuario->aparelhos); $i++) {
@@ -166,6 +192,23 @@ function update($conexao, $usuario) {
     
             if ($multiple != '') {
                 $query = "INSERT INTO usuarios_aparelhos (id_usuario, id_aparelho) VALUES $multiple;";
+                $result = pg_query($conexao, $query);
+            }
+
+            $result = true;
+            $multiple = '';
+
+            for ($i=0; $i < count($usuario->perfis); $i++) {
+                $id_perfil = $usuario->perfis[$i]->id_perfil;
+                $multiple .= "($usuario->id_usuario, $id_perfil)";
+                
+                if ($i < count($usuario->perfis) - 1) {
+                    $multiple .= ', ';
+                }
+            }
+
+            if ($multiple != '') {
+                $query = "INSERT INTO usuarios_perfil (id_usuario, id_perfil) VALUES $multiple;";
                 $result = pg_query($conexao, $query);
             }
     
@@ -184,7 +227,7 @@ function update($conexao, $usuario) {
 }
 
 function delete($conexao, $id) {
-    $query = "DELETE FROM usuarios WHERE id_usuario = $id;";
+    $query = "DELETE FROM usuarios_aparelhos WHERE id_usuario = $id;";
     
     $result = pg_query($conexao, $query);
 
@@ -193,9 +236,29 @@ function delete($conexao, $id) {
         $resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
         echo json_encode($resposta);
     }else{
-        http_response_code(200);  
-        $resposta['msg'] = 'Usuário deletado!';
-        echo json_encode($resposta);      
+        $query = "DELETE FROM usuarios_perfil WHERE id_usuario = $id;";
+    
+        $result = pg_query($conexao, $query);
+        
+        if (!$result) {
+            http_response_code(500);
+            $resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
+            echo json_encode($resposta);
+        }else{
+            $query = "DELETE FROM usuarios WHERE id_usuario = $id;";
+    
+            $result = pg_query($conexao, $query);
+
+            if (!$result) {
+                http_response_code(500);
+                $resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
+                echo json_encode($resposta);
+            }else{
+                http_response_code(200);  
+                $resposta['msg'] = 'Usuário deletado!';
+                echo json_encode($resposta);      
+            }     
+        }
     }
 }
 
@@ -216,6 +279,42 @@ function findOne($conexao, $id) {
         $result = pg_query($conexao, $query);
         
         $resposta['aparelhos'] = pg_fetch_all($result);
+
+        http_response_code(200);  
+        echo json_encode($resposta);              
+    }
+}
+
+function findByPerfil($conexao, $perfil) {
+    $query = "SELECT A.* FROM usuarios A INNER JOIN usuarios_perfil B ON A.id_usuario = B.id_usuario INNER JOIN perfil C ON B.id_perfil = C.id_perfil WHERE C.id_perfil = $perfil->id_perfil;";
+        
+    $result = pg_query($conexao, $query);
+
+    if (!$result) {
+        http_response_code(500);
+		$resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
+		echo json_encode($resposta);
+	}else{
+
+        $resposta = pg_fetch_all($result);
+        
+        for ($i=0; $i < count($resposta); $i++) {
+            $id_usuario = $resposta[$i]['id_usuario'];
+            $query = "SELECT C.* FROM usuarios A RIGHT JOIN usuarios_aparelhos B ON A.id_usuario = B.id_usuario RIGHT JOIN aparelhos C ON B.id_aparelho = C.id_aparelho WHERE A.id_usuario = $id_usuario;";
+            
+            $result = pg_query($conexao, $query);
+            
+            $resposta[$i]['aparelhos'] = pg_fetch_all($result);
+        }
+
+        for ($i=0; $i < count($resposta); $i++) {
+            $id_usuario = $resposta[$i]['id_usuario'];
+            $query = "SELECT C.* FROM usuarios A RIGHT JOIN usuarios_perfil B ON A.id_usuario = B.id_usuario RIGHT JOIN perfil C ON B.id_perfil = C.id_perfil WHERE A.id_usuario = $id_usuario;";
+            
+            $result = pg_query($conexao, $query);
+            
+            $resposta[$i]['perfis'] = pg_fetch_all($result);
+        }
 
         http_response_code(200);  
         echo json_encode($resposta);              

@@ -126,7 +126,7 @@ function delete($conexao, $id) {
 
     if (!$result) {
         http_response_code(500);
-        $resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
+        $resposta['msg'] = 'Desculpe, ação negada. Verifique se este registro está associado à um usuário.';
         echo json_encode($resposta);
     }else{
         http_response_code(200);  
@@ -136,7 +136,7 @@ function delete($conexao, $id) {
 }
 
 function findOne($conexao, $id) {
-    $query = "SELECT * FROM perfils WHERE id_perfil = $id;";
+    $query = "SELECT * FROM perfil WHERE id_perfil = $id;";
 
     $result = pg_query($conexao, $query);
     
