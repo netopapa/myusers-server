@@ -25,8 +25,8 @@ switch ($metodo) {
 
             findOne($conexao, $id);
         } else if (isset($_GET['f'])) {  
-			$funcao = $_GET['f'];
-			$funcao($conexao);
+            $funcao = $_GET['f'];
+            $funcao($conexao);
             
         } else {
             findAll($conexao);
@@ -54,32 +54,34 @@ switch ($metodo) {
             delete($conexao, $id);
         } else {
             http_response_code(400);
-            $resposta['msg'] = 'É necessario informar ID do aparelho.';
+            $resposta['msg'] = 'É necessario informar ID do Usuário.';
             echo json_encode($resposta);          
         }
-        break;  
+    break;  
 }
 
 #----------------------------------------------------------------------------------------------------
 
 function findAll($conexao) {
-    $query = "SELECT * FROM aparelhos;";
+
+    $query = "SELECT * FROM perfil;";
 
 	$result = pg_query($conexao, $query);
-	if (!$result) {
+    
+    if (!$result) {
         http_response_code(500);
-		$resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
-		echo json_encode($resposta);
-	}else{
+        $resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
+        echo json_encode($resposta);
+    }else{
         http_response_code(200);  
         $resposta = pg_fetch_all($result);
-        echo json_encode($resposta);              
+        echo json_encode($resposta);       
     }
 }
 
-function save($conexao, $aparelho) {
+function save($conexao, $perfil) {
 
-    $query = "INSERT INTO aparelhos (descricao_aparelho,codigo_aparelho) VALUES ('$aparelho->descricao_aparelho', '$aparelho->codigo_aparelho');";
+    $query = "INSERT INTO perfil (nome_perfil) VALUES ('$perfil->nome_perfil');";
 
     $result = pg_query($conexao, $query);
 
@@ -89,19 +91,19 @@ function save($conexao, $aparelho) {
         echo json_encode($resposta);
     }else{
         http_response_code(200);  
-        $resposta['msg'] = 'Aparelho salvo!';
-        echo json_encode($resposta);              
+        $resposta['msg'] = 'Perfil salvo!';
+        echo json_encode($resposta);       
     }
 }
 
-function update($conexao, $aparelho) {
+function update($conexao, $perfil) {
 
-    if (!$aparelho->id_aparelho) {
+    if (!$perfil->id_perfil) {
         http_response_code(400);
-        $resposta['msg'] = 'É necessario informar ID do aparelho.';
+        $resposta['msg'] = 'É necessario informar ID do perfil.';
         echo json_encode($resposta);
     } else {
-        $query = "UPDATE aparelhos SET descricao_aparelho = '$aparelho->descricao_aparelho', codigo_aparelho = '$aparelho->codigo_aparelho' WHERE id_aparelho = $aparelho->id_aparelho;";
+        $query = "UPDATE perfil SET nome_perfil = '$perfil->nome_perfil' WHERE id_perfil = $perfil->id_perfil;";
     
         $result = pg_query($conexao, $query);
     
@@ -111,15 +113,14 @@ function update($conexao, $aparelho) {
             echo json_encode($resposta);
         }else{
             http_response_code(200);  
-            $resposta['msg'] = 'Aparelho alterado!';
+            $resposta['msg'] = 'Perfil alterado!';
             echo json_encode($resposta);      
-        }
+        }   
     }
-    
 }
 
 function delete($conexao, $id) {
-    $query = "DELETE FROM aparelhos WHERE id_aparelho = $id;";
+    $query = "DELETE FROM perfil WHERE id_perfil = $id;";
     
     $result = pg_query($conexao, $query);
 
@@ -129,15 +130,16 @@ function delete($conexao, $id) {
         echo json_encode($resposta);
     }else{
         http_response_code(200);  
-        $resposta['msg'] = 'Aparelho deletado!';
+        $resposta['msg'] = 'Perfil deletado!';
         echo json_encode($resposta);      
     }
 }
 
 function findOne($conexao, $id) {
-    $query = "SELECT * FROM aparelhos WHERE id_aparelho = $id;";
+    $query = "SELECT * FROM perfils WHERE id_perfil = $id;";
 
-	$result = pg_query($conexao, $query);
+    $result = pg_query($conexao, $query);
+    
 	if (!$result) {
         http_response_code(500);
 		$resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
@@ -145,22 +147,6 @@ function findOne($conexao, $id) {
 	}else{
         http_response_code(200);  
         $resposta = pg_fetch_assoc($result);
-        echo json_encode($resposta);              
-    }
-}
-
-function findByUsuario($conexao, $usuario) {
-    $query = "SELECT C.* FROM usuarios A RIGHT JOIN usuarios_aparelhos B ON A.id_usuario = B.id_usuario RIGHT JOIN aparelhos C ON B.id_aparelho = C.id_aparelho WHERE A.id_usuario = $usuario->id_usuario;";
-        
-    $result = pg_query($conexao, $query);
-
-    if (!$result) {
-        http_response_code(500);
-		$resposta['msg'] = 'Desculpe, houve uma falha interna. Tente novamente.';
-		echo json_encode($resposta);
-	}else{
-        http_response_code(200);  
-        $resposta = pg_fetch_all($result);
         echo json_encode($resposta);              
     }
 }

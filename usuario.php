@@ -44,7 +44,8 @@ switch ($metodo) {
             save($conexao, $request);                        
         }else{
             http_response_code(400);
-            echo json_encode(array("Requisição incompleta."));
+            $resposta['msg'] = 'Requisição incompleta.';
+            echo json_encode($resposta);
         }
         break;
     default:
